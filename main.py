@@ -46,12 +46,16 @@ async def delete(ctx, productname : str):
 @bot.slash_command(name="products", description="sends the products that exist")
 async def products(ctx):
 
-    productsdata =   collection.find({ "guildid": ctx.guild.id })
+    productsdata = collection.find({ "guildid": ctx.guild.id })
 
     error = nextcord.Embed(title="Error!", description="No products found please run ``/createproduct`` to create a product.")
 
-    embed = nextcord.Embed(title=f"Products For {ctx.guild.name}", description=f"{productsdata['productname']}")
-    await ctx.send(embed=embed)
+    embed = nextcord.Embed(title=f"Products For {ctx.guild.name}", description="\n".join(productsdata['productname']))
+
+    if collection.count_documents({ "guildid": ctx.guild.id }):
+        ctx.send(embed=embed)
+    else:
+        ctx.send(embed=error)
 
 
 bot.run('ODkzOTI3MzcxOTg2NTcxMzA2.G7WCrc.kAuu6wJ8VUJtLcU5TgZvkqda-PmcZFoMbF7_RU')
