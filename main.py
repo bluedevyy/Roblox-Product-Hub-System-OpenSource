@@ -1,8 +1,10 @@
 import nextcord
 from nextcord.ext import commands, application_checks
 import pymongo
+import random
 
-MONGOURI = "mongodb+srv://Blue:Blue@sustain.ghwzh3l.mongodb.net/?retryWrites=true&w=majority"
+MONGOURI = ""
+TOKEN = ""
 
 client = pymongo.MongoClient(MONGOURI)
 db = client.data
@@ -64,21 +66,52 @@ async def products(ctx):
         ctx.send(embed=error)
 
 @bot.slash_command(name="setup", description="setups the hub")
+@application_checks.has_permissions(kick_members=True)
 async def setup(ctx, hubname : str, placeid : str):
 
-    embed = nextcord.Embed(title="")
+    apikeygener = random.randrange(35409834590843908)
+
+    embed = nextcord.Embed(title="setup", description="We're setting up your hub for your right now. you will shortly be messaged the details.")
+    error = nextcord.Embed(title="Error", description="Hub is already setup")
 
     if collection2.count_documents({ "guildid": ctx.guild.id }):
-        await ctx.send('Hub is already setup.')
+        await ctx.send(embed=error)
     else:
         await ctx.send(embed=embed)
+
+        collection2.insert_one(
+            {
+                "guildid": ctx.guild.id,
+                "customhub": False,
+                "apikey": apikeygener,
+                "placeid": placeid,
+                "hubname": hubname,
+            }
+        )
+
+        data11 = collection2.find_one(
+            {
+                "guildid": ctx.guild.id
+            }
+        )
+
+        await ctx.user.send(f"apikey: {data11['apikey']}, hubname: {data11['hubname']}, customhub: {data11['customhub']}")
 
 @bot.slash_command(name="hub", description="sends the data of the hub.")
 async def hub(ctx):
 
+    data = collection2.find_one(
+        {
+            "guildid": ctx.guild.id
+        }
+    )
+
+    embed = nextcord.Embed(title=f"Hub Information", description=f"customhub: {data['customhub']}\n\nplaceid: {data['placeid']}\n\\napikey: {data['apikey']}\n\n hubname: {data['hubname']}")
+
+    if collection2.count_documents({ "guildid": ctx.guild.id }):
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send("this guild doesn't have a hub.")
 
 
-    await ctx.send(embed=embed)
-
-
-bot.run('ODkzOTI3MzcxOTg2NTcxMzA2.G7WCrc.kAuu6wJ8VUJtLcU5TgZvkqda-PmcZFoMbF7_RU')
+bot.run(TOKEN)
