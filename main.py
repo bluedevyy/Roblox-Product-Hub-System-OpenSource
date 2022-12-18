@@ -3,8 +3,8 @@ from nextcord.ext import commands, application_checks
 import pymongo
 import random
 
-MONGOURI = ""
-TOKEN = ""
+MONGOURI = "mongodb+srv://Blue:Blue@sustain.ghwzh3l.mongodb.net/?retryWrites=true&w=majority"
+TOKEN = "ODkzOTI3MzcxOTg2NTcxMzA2.GeMwm9.ryDKiN449iCYhtbtzIib5JwSaNbWBAF2PrrckQ"
 
 client = pymongo.MongoClient(MONGOURI)
 db = client.data
