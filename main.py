@@ -2,9 +2,15 @@ import nextcord
 from nextcord.ext import commands, application_checks
 import pymongo
 
-client = pymongo.MongoClient('mongodb+srv://Blue:Blue@sustain.ghwzh3l.mongodb.net/?retryWrites=true&w=majority')
+MONGOURI = "mongodb+srv://Blue:Blue@sustain.ghwzh3l.mongodb.net/?retryWrites=true&w=majority"
+
+client = pymongo.MongoClient(MONGOURI)
 db = client.data
 collection = db.products
+
+client2 = pymongo.MongoClient(MONGOURI)
+db2 = client2.data
+collection2 = db2.hub
 
 intents = nextcord.Intents.all()
 
@@ -56,6 +62,23 @@ async def products(ctx):
         ctx.send(embed=embed)
     else:
         ctx.send(embed=error)
+
+@bot.slash_command(name="setup", description="setups the hub")
+async def setup(ctx, hubname : str, placeid : str):
+
+    embed = nextcord.Embed(title="")
+
+    if collection2.count_documents({ "guildid": ctx.guild.id }):
+        await ctx.send('Hub is already setup.')
+    else:
+        await ctx.send(embed=embed)
+
+@bot.slash_command(name="hub", description="sends the data of the hub.")
+async def hub(ctx):
+
+
+
+    await ctx.send(embed=embed)
 
 
 bot.run('ODkzOTI3MzcxOTg2NTcxMzA2.G7WCrc.kAuu6wJ8VUJtLcU5TgZvkqda-PmcZFoMbF7_RU')
