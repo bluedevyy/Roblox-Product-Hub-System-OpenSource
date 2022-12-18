@@ -112,6 +112,57 @@ async def hub(ctx):
         await ctx.send(embed=embed)
     else:
         await ctx.send("this guild doesn't have a hub.")
+        print(f"{ctx.guild.name} has no hub setup")
+
+@bot.slash_command(name="editproduct", description="edits a product")
+async def edit(ctx, currentproductname : str, newproductname : str, newproductid : str, newproductdescription : str, newproductstock : int, newproducttag : str):
+    if collection.count_documents({ "productname": currentproductname }):
+        await ctx.send('Updated product successfully.')
+
+        ok22 = collection.find_one(
+            {
+                "productname": currentproductname
+            }
+        )
+
+        ok = collection.update_one(
+        {"productname": ok22['productname']},
+        {"$set": 
+            {"productname": newproductname}
+        },upsert=True
+    )
+
+        ok = collection.update_one(
+        {"productdescription": ok22['productdescription']},
+        {"$set": 
+            {"productdescription": newproductdescription}
+        },upsert=True
+    )
+
+        ok = collection.update_one(
+        {"productid": ok22['productid']},
+        {"$set": 
+            {"productdescription": newproductid}
+        },upsert=True
+    )
+
+        ok = collection.update_one(
+        {"productstock": ok22['productstock']},
+        {"$set": 
+            {"productstock": newproductstock}
+        },upsert=True
+    )
+
+        ok = collection.update_one(
+        {"producttag": ok22['producttag']},
+        {"$set": 
+            {"producttag": newproducttag}
+        },upsert=True
+    )
+
+
+    else:
+        await ctx.send("Product doesn't exist.")
 
 
 bot.run(TOKEN)
