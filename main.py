@@ -70,17 +70,17 @@ async def delete(ctx, productname : str = SlashOption(name="productname", descri
 
 @bot.slash_command(name="products", description="sends the products that exist")
 async def products(ctx):
-
+    
     productsdata = collection.find({ "guildid": ctx.guild.id })
 
     error = nextcord.Embed(title="Error!", description="No products found please run ``/createproduct`` to create a product.")
 
-    embed = nextcord.Embed(title=f"Products For {ctx.guild.name}", description="\n".join(productsdata['productname']))
+    embed = nextcord.Embed(title=f"Products For {ctx.guild.name}", description="Products Below.").add_field(name="Products", value=f"\n".join(map(str, productsdata["productname"])), inline=False)
 
     if collection.count_documents({ "guildid": ctx.guild.id }):
-        ctx.send(embed=embed)
+        await ctx.send(embed=embed)
     else:
-        ctx.send(embed=error)
+        await ctx.send(embed=error)
 
 @bot.slash_command(name="setup", description="setups the hub")
 @application_checks.has_permissions(kick_members=True)
@@ -103,6 +103,7 @@ async def setup(ctx, hubname : str = SlashOption(name="hubname", description="th
                 "apikey": apikeygener,
                 "placeid": placeid,
                 "hubname": hubname,
+                "products": []
             }
         )
 
@@ -183,16 +184,17 @@ async def edit(ctx, currentproductname : str = SlashOption(name="currentproductn
 @bot.slash_command(name="giveproduct", description="gives a user a product")
 async def give(ctx, user : nextcord.Member, productname : str = SlashOption(name="productname", description="the products name", required=True)):
     if collection.count_documents({ "productname": productname }):
+
         if collection3.count_documents({ "userid": ctx.user.id }):
             await ctx.send(f'Gave {productname} to {user.name}.')
             ok = collection.insert_one(
-        {"ownedproducts": ('none')},
-        {"$set": 
-            {"ownedproducts": (f'{productname}')}
-        },upsert=True
-    )
+                {
+                    "Ownedproducts": [productname],
+                }
+            )
         else:
             await ctx.send(f"user isn't linked.")
+
     else:
         await ctx.send("product doesn't exist")
 
@@ -223,10 +225,26 @@ async def profile(ctx, user : nextcord.Member):
         }
     )
 
-    embed = nextcord.Embed(title=f"Profile Of {user.name}", description=f"DiscordID:\n{user.id}\nRobloxusername:\n{data['robloxusername']}\n{data['Ownedproducts']}")
+    embed = nextcord.Embed(title=f"Profile Of {user.name}", description=f"DiscordID:\n{user.id}\nRobloxusername:\n{data['robloxusername']}").add_field(name="OwnedProducts", value=f"\n".join(map(str, data['Ownedproducts'])))
     if collection3.count_documents({ "userid": user.id }):
         await ctx.send(embed=embed)
     else: 
         await ctx.send("User isn't linked.")
+
+@bot.slash_command(name="unlink", description="unlinks your roblox account")
+async def unlink(ctx):
+    if collection3.count_documents({ "userid": ctx.user.id }):
+        await ctx.send('Unlinked successfully.')
+        collection3.delete_one(
+            {
+                "userid": ctx.user.id
+            }
+        )
+    else:
+        await ctx.send('Your not linked.')
+
+@bot.slash_command(name="ping", description="the bots ping")
+async def ping(ctx):
+    await ctx.send(f'bot ping: **{bot.latency*100:,.0f} ms**')
 
 bot.run(TOKEN)
