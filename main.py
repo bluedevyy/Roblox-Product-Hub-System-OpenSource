@@ -1,5 +1,6 @@
 import nextcord
 from nextcord.ext import commands, application_checks
+from nextcord import SlashOption
 import pymongo
 import random
 
@@ -14,6 +15,10 @@ client2 = pymongo.MongoClient(MONGOURI)
 db2 = client2.data
 collection2 = db2.hub
 
+client3 = pymongo.MongoClient(MONGOURI)
+db3 = client3.data
+collection3 = db3.users
+
 intents = nextcord.Intents.all()
 
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -23,7 +28,7 @@ async def on_ready():
     print('Bot Ready!')
 
 @bot.slash_command(name="createproduct", description="creates a product")
-async def create(ctx, productname : str, productdescription : str, productid : str, productstock : int, producttag : str):
+async def create(ctx, productname : str = SlashOption(name="productname", description="the products name", required=True), productdescription : str = SlashOption(name="productdescription", description="the products description", required=True), productid : str = SlashOption(name="productid", description="the products id", required=True), productstock : int = SlashOption(name="productstock", description="the products stock", required=True), producttag : str = SlashOption(name="producttag", description="the products tag", required=True)):
     if collection.count_documents({"productname": productname}):
         await ctx.send('a product with that name already exists.')
     else:
@@ -39,8 +44,20 @@ async def create(ctx, productname : str, productdescription : str, productid : s
             }
         )
 
+producttemplate = (
+    {
+        "guildid": 0,
+        "productname": 0,
+        "productdescription": 0,
+        "productid": 0,
+        "productstock": 0,
+        "producttag": 0
+    }
+)        
+
 @bot.slash_command(name="deleteproduct", description="deletes a product")
-async def delete(ctx, productname : str):
+@application_checks.has_permissions(kick_members=True)
+async def delete(ctx, productname : str = SlashOption(name="productname", description="the products name", required=True)):
     if collection.count_documents({"productname": productname}):
         await ctx.send('product deleted successfully.')
         collection.delete_one(
@@ -67,11 +84,11 @@ async def products(ctx):
 
 @bot.slash_command(name="setup", description="setups the hub")
 @application_checks.has_permissions(kick_members=True)
-async def setup(ctx, hubname : str, placeid : str):
+async def setup(ctx, hubname : str = SlashOption(name="hubname", description="the hubs name", required=True), placeid : str = SlashOption(name="placeid", description="the placeid of the hub", required=True)):
 
     apikeygener = random.randrange(35409834590843908)
 
-    embed = nextcord.Embed(title="setup", description="We're setting up your hub for your right now. you will shortly be messaged the details.")
+    embed = nextcord.Embed(title="Setup The Hub.", description="We're setting up your hub for your right now. you will shortly be messaged the details.")
     error = nextcord.Embed(title="Error", description="Hub is already setup")
 
     if collection2.count_documents({ "guildid": ctx.guild.id }):
@@ -115,7 +132,7 @@ async def hub(ctx):
         print(f"{ctx.guild.name} has no hub setup")
 
 @bot.slash_command(name="editproduct", description="edits a product")
-async def edit(ctx, currentproductname : str, newproductname : str, newproductid : str, newproductdescription : str, newproductstock : int, newproducttag : str):
+async def edit(ctx, currentproductname : str = SlashOption(name="currentproductname", description="the products current name", required=False), newproductname : str = SlashOption(name="newproductname", description="the products new name", required=False), newproductid : str = SlashOption(name="newproductid", description="the products new id", required=False), newproductdescription : str = SlashOption(name="newproductdescription", required=False), newproductstock : int = SlashOption(name="newproductstock", description="the products new stock", required=False), newproducttag : str = SlashOption(name="newproducttag", description="the products new tag", required=False)):
     if collection.count_documents({ "productname": currentproductname }):
         await ctx.send('Updated product successfully.')
 
@@ -160,9 +177,56 @@ async def edit(ctx, currentproductname : str, newproductname : str, newproductid
         },upsert=True
     )
 
-
     else:
         await ctx.send("Product doesn't exist.")
 
+@bot.slash_command(name="giveproduct", description="gives a user a product")
+async def give(ctx, user : nextcord.Member, productname : str = SlashOption(name="productname", description="the products name", required=True)):
+    if collection.count_documents({ "productname": productname }):
+        if collection3.count_documents({ "userid": ctx.user.id }):
+            await ctx.send(f'Gave {productname} to {user.name}.')
+            ok = collection.insert_one(
+        {"ownedproducts": ('none')},
+        {"$set": 
+            {"ownedproducts": (f'{productname}')}
+        },upsert=True
+    )
+        else:
+            await ctx.send(f"user isn't linked.")
+    else:
+        await ctx.send("product doesn't exist")
+
+@bot.slash_command(name="link", description="links a user")
+async def link(ctx, robloxusername : str = SlashOption(name="robloxusername", description="your roblox username", required=True)):
+    if collection3.count_documents({ "userid": ctx.user.id }):
+        await ctx.send('your already linked.')
+    else:
+        await ctx.send(f'linked as {robloxusername} Successfully.')
+
+        collection3.insert_one(
+            {
+                "userid": ctx.user.id,
+                "robloxusername": robloxusername,
+                "Ownedproducts": ['none'],
+                "linked": True,
+                "HasCustomBot": False,
+            }
+        )
+
+
+@bot.slash_command(name="profile", description="sends a users profile")
+async def profile(ctx, user : nextcord.Member):
+
+    data = collection3.find_one(
+        {
+            "userid": user.id
+        }
+    )
+
+    embed = nextcord.Embed(title=f"Profile Of {user.name}", description=f"DiscordID:\n{user.id}\nRobloxusername:\n{data['robloxusername']}\n{data['Ownedproducts']}")
+    if collection3.count_documents({ "userid": user.id }):
+        await ctx.send(embed=embed)
+    else: 
+        await ctx.send("User isn't linked.")
 
 bot.run(TOKEN)
