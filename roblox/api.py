@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import pymongo
 from ..main import MONGOURI
+import uvicorn
 
 client3 = pymongo.MongoClient(MONGOURI)
 db3 = client3.data

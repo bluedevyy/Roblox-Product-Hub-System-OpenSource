@@ -28,7 +28,7 @@ async def on_ready():
     print('Bot Ready!')
 
 @bot.slash_command(name="createproduct", description="creates a product")
-async def create(ctx, productname : str = SlashOption(name="productname", description="the products name", required=True), productdescription : str = SlashOption(name="productdescription", description="the products description", required=True), productid : str = SlashOption(name="productid", description="the products id", required=True), productstock : int = SlashOption(name="productstock", description="the products stock", required=True), producttag : str = SlashOption(name="producttag", description="the products tag", required=True)):
+async def create(ctx, productname : str = SlashOption(name="productname", description="the products name", required=True), productdescription : str = SlashOption(name="productdescription", description="the products description", required=True), productid : str = SlashOption(name="productid", description="the products id", required=True), productstock : int = SlashOption(name="productstock", description="the products stock", required=True), producttag : str = SlashOption(name="producttag", description="the products tag", required=True), productlink : str = SlashOption(name="productlink", description="the products download link", required=True)):
     if collection.count_documents({"productname": productname}):
         await ctx.send('a product with that name already exists.')
     else:
@@ -40,7 +40,8 @@ async def create(ctx, productname : str = SlashOption(name="productname", descri
                 "productdescription": productdescription,
                 "productid": productid,
                 "productstock": productstock,
-                "producttag": producttag
+                "producttag": producttag,
+                "productlink": productlink
             }
         )
 
@@ -71,7 +72,7 @@ async def delete(ctx, productname : str = SlashOption(name="productname", descri
 @bot.slash_command(name="products", description="sends the products that exist")
 async def products(ctx):
     
-    productsdata = collection.find({ "guildid": ctx.guild.id })
+    productsdata = collection.find_one({ "guildid": ctx.guild.id })
 
     error = nextcord.Embed(title="Error!", description="No products found please run ``/createproduct`` to create a product.")
 
@@ -133,7 +134,7 @@ async def hub(ctx):
         print(f"{ctx.guild.name} has no hub setup")
 
 @bot.slash_command(name="editproduct", description="edits a product")
-async def edit(ctx, currentproductname : str = SlashOption(name="currentproductname", description="the products current name", required=False), newproductname : str = SlashOption(name="newproductname", description="the products new name", required=False), newproductid : str = SlashOption(name="newproductid", description="the products new id", required=False), newproductdescription : str = SlashOption(name="newproductdescription", required=False), newproductstock : int = SlashOption(name="newproductstock", description="the products new stock", required=False), newproducttag : str = SlashOption(name="newproducttag", description="the products new tag", required=False)):
+async def edit(ctx, currentproductname : str = SlashOption(name="currentproductname", description="the products current name", required=False), newproductname : str = SlashOption(name="newproductname", description="the products new name", required=False), newproductid : str = SlashOption(name="newproductid", description="the products new id", required=False), newproductdescription : str = SlashOption(name="newproductdescription", required=False), newproductstock : int = SlashOption(name="newproductstock", description="the products new stock", required=False), newproducttag : str = SlashOption(name="newproducttag", description="the products new tag", required=False), productlink : str = SlashOption(name="productlink", description="the products download link", required=False)):
     if collection.count_documents({ "productname": currentproductname }):
         await ctx.send('Updated product successfully.')
 
@@ -181,15 +182,17 @@ async def edit(ctx, currentproductname : str = SlashOption(name="currentproductn
     else:
         await ctx.send("Product doesn't exist.")
 
+collection3
+
 @bot.slash_command(name="giveproduct", description="gives a user a product")
 async def give(ctx, user : nextcord.Member, productname : str = SlashOption(name="productname", description="the products name", required=True)):
     if collection.count_documents({ "productname": productname }):
 
         if collection3.count_documents({ "userid": ctx.user.id }):
             await ctx.send(f'Gave {productname} to {user.name}.')
-            ok = collection.insert_one(
+            ok = collection3.insert_one(
                 {
-                    "Ownedproducts": [productname],
+                    "Ownedproducts": [f'{productname}'],
                 }
             )
         else:
@@ -246,5 +249,24 @@ async def unlink(ctx):
 @bot.slash_command(name="ping", description="the bots ping")
 async def ping(ctx):
     await ctx.send(f'bot ping: **{bot.latency*100:,.0f} ms**')
+
+# retrievetemplate = nextcord.Embed(title="Thanks For Purchasing!", description="Thanks For Purchasing A Product From us. the product is below.")
+# retrievetemplate.add_field(name="DownloadLink": value=f"Link", inline=False)
+
+@bot.slash_command(name="retrieveproduct", description="retrieves a product")
+async def retrieve(ctx, productname : str = SlashOption(name="productname", description="the products name", required=True)):
+    embederror = nextcord.Embed(title="You do not own this product.", description="you don't own this product.")
+    if collection3.count_documents({ "Ownedproducts": [productname] }):
+
+        productsclientdata = collection.find_one(
+            {
+                "productname": productname,
+            }
+        )
+
+        embed = nextcord.Embed(title="Thanks For Purchasing!", description=f"Thanks For Purchasing A Product From us. the product is below.\n Downloadlink: {productsclientdata['productlink']}")
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send(embed=embederror)
 
 bot.run(TOKEN)
