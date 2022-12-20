@@ -28,6 +28,7 @@ async def on_ready():
     print('Bot Ready!')
 
 @bot.slash_command(name="createproduct", description="creates a product")
+@application_checks.has_permissions(kick_members=True)
 async def create(ctx, productname : str = SlashOption(name="productname", description="the products name", required=True), productdescription : str = SlashOption(name="productdescription", description="the products description", required=True), productid : str = SlashOption(name="productid", description="the products id", required=True), productstock : int = SlashOption(name="productstock", description="the products stock", required=True), producttag : str = SlashOption(name="producttag", description="the products tag", required=True), productlink : str = SlashOption(name="productlink", description="the products download link", required=True)):
     if collection.count_documents({"productname": productname}):
         await ctx.send('a product with that name already exists.')
@@ -52,7 +53,8 @@ producttemplate = (
         "productdescription": 0,
         "productid": 0,
         "productstock": 0,
-        "producttag": 0
+        "producttag": 0,
+        "productlink": 0
     }
 )        
 
@@ -134,6 +136,7 @@ async def hub(ctx):
         print(f"{ctx.guild.name} has no hub setup")
 
 @bot.slash_command(name="editproduct", description="edits a product")
+@application_checks.has_permissions(kick_members=True)
 async def edit(ctx, currentproductname : str = SlashOption(name="currentproductname", description="the products current name", required=False), newproductname : str = SlashOption(name="newproductname", description="the products new name", required=False), newproductid : str = SlashOption(name="newproductid", description="the products new id", required=False), newproductdescription : str = SlashOption(name="newproductdescription", required=False), newproductstock : int = SlashOption(name="newproductstock", description="the products new stock", required=False), newproducttag : str = SlashOption(name="newproducttag", description="the products new tag", required=False), productlink : str = SlashOption(name="productlink", description="the products download link", required=False)):
     if collection.count_documents({ "productname": currentproductname }):
         await ctx.send('Updated product successfully.')
@@ -185,6 +188,7 @@ async def edit(ctx, currentproductname : str = SlashOption(name="currentproductn
 collection3
 
 @bot.slash_command(name="giveproduct", description="gives a user a product")
+@application_checks.has_permissions(kick_members=True)
 async def give(ctx, user : nextcord.Member, productname : str = SlashOption(name="productname", description="the products name", required=True)):
     if collection.count_documents({ "productname": productname }):
 
@@ -207,6 +211,7 @@ async def link(ctx, robloxusername : str = SlashOption(name="robloxusername", de
         await ctx.send('your already linked.')
     else:
         await ctx.send(f'linked as {robloxusername} Successfully.')
+        await ctx.user.edit(nick=robloxusername)
 
         collection3.insert_one(
             {
@@ -220,7 +225,7 @@ async def link(ctx, robloxusername : str = SlashOption(name="robloxusername", de
 
 
 @bot.slash_command(name="profile", description="sends a users profile")
-async def profile(ctx, user : nextcord.Member):
+async def profile(ctx, user : nextcord.Member = SlashOption(name="user", description="the users profile you want to view.", required=False)):
 
     data = collection3.find_one(
         {
@@ -268,5 +273,20 @@ async def retrieve(ctx, productname : str = SlashOption(name="productname", desc
         await ctx.send(embed=embed)
     else:
         await ctx.send(embed=embederror)
+
+@bot.slash_command(name="revokeproduct", description="revokes a product")
+async def revoke(ctx, user : nextcord.Member = SlashOption(name="user", description="the user you want revoke a product from.", required=True), productname : str = SlashOption(name="productname", description="the products name", required=True)):
+    if collection3.count_documents({ "userid": user.id, "Ownedproducts": [f'{productname}'] }):
+        await ctx.send(f"revoked {productname} from {user.name}")
+    else:
+        await ctx.send("User doesn't own that product. or user doesn't exist.")
+
+@bot.slash_command(name="transferdata", description="transfers users data to another account.")
+async def transfer(ctx, newaccount : nextcord.Member = SlashOption(name="newaccount", description="the new account to transfer data to.", required=True)):
+    if collection3.count_documents({ "userid": ctx.user.id }):
+        await ctx.send('Transferred data succecssfully.')
+        
+    else:
+        await ctx.send("Couldn't transfer data maybe because the user isn't linked.")
 
 bot.run(TOKEN)
