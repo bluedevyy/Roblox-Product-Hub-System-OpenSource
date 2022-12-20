@@ -282,10 +282,11 @@ async def revoke(ctx, user : nextcord.Member = SlashOption(name="user", descript
         await ctx.send("User doesn't own that product. or user doesn't exist.")
 
 @bot.slash_command(name="transferdata", description="transfers users data to another account.")
-async def transfer(ctx, newaccount : nextcord.Member = SlashOption(name="newaccount", description="the new account to transfer data to.", required=True)):
+async def transfer(ctx, newaccount : nextcord.Member = SlashOption(name="newaccount", description="the new account to transfer data to.", required=False)):
     if collection3.count_documents({ "userid": ctx.user.id }):
         await ctx.send('Transferred data succecssfully.')
-        
+        if not newaccount:
+            await ctx.send('You forgot a vital arguement.')
     else:
         await ctx.send("Couldn't transfer data maybe because the user isn't linked.")
 
