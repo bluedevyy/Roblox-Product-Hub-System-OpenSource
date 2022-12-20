@@ -286,7 +286,7 @@ async def transfer(ctx, newaccount : nextcord.Member = SlashOption(name="newacco
     if collection3.count_documents({ "userid": ctx.user.id }):
         await ctx.send('Transferred data succecssfully.')
         if not newaccount:
-            await ctx.send('You forgot a vital arguement.')
+            await ctx.send('You forgot a vital arguement. please rerun ``/transferdata``')
     else:
         await ctx.send("Couldn't transfer data maybe because the user isn't linked.")
 
