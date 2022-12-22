@@ -288,6 +288,19 @@ async def transfer(ctx, newaccount : nextcord.Member = SlashOption(name="newacco
             await ctx.send('You forgot a vital arguement. please rerun ``/transferdata``')
         if newaccount:
             await ctx.send('Transferred data succecssfully.')
+
+        ok22 = collection3.find_One(
+            {
+                "userid": ctx.user.id,
+            }
+        )
+
+        ok = collection.update_one(
+        {"userid": ctx.user.id},
+        {"$set": 
+            {"userid": newaccount.id}
+        },upsert=True
+    )
     else:
         await ctx.send("Couldn't transfer data maybe because the user isn't linked.")
 
