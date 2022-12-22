@@ -19,6 +19,10 @@ client3 = pymongo.MongoClient(MONGOURI)
 db3 = client3.data
 collection3 = db3.users
 
+client4 = pymongo.MongoClient(MONGOURI)
+db4 = client4.data
+collection4 = db4.custombots
+
 intents = nextcord.Intents.all()
 
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -303,5 +307,65 @@ async def transfer(ctx, newaccount : nextcord.Member = SlashOption(name="newacco
     )
     else:
         await ctx.send("Couldn't transfer data maybe because the user isn't linked.")
+
+@bot.slash_command(name="create-custombot", description="creates a custom bot.")
+async def createcustombot(ctx, name : str = SlashOption(name="name", description="the bots name", required=True), precense : str = SlashOption(name="precense", description="the bots precense text.", required=True), bottoken : str = SlashOption(name="bottoken", description="the bots token.", required=True), status : str = SlashOption(name="status", description="e.g idle, online, offline, dnd", required=True)):
+    data = collection3.find_one(
+        {
+            "userid": ctx.user.id      
+        }
+    )
+
+    if data['HasCustomBot'] == True:
+        await ctx.send('Creating custom bot please wait..')
+
+        collection4.insert_one(
+            {
+                "userid": ctx.user.id,
+                "name": name,
+                "bottoken": bottoken,
+                "precense": precense,
+                "status": status          
+            }
+        )
+    else:
+        if data['HasCustomBot'] == False:
+            await ctx.send("Nice try, you don't own a custom bot.") 
+
+@bot.slash_command(name="delete-custombot", description="deletes your custom bot.")
+async def createcustombot(ctx, name : str):
+    data = collection3.find_one(
+        {
+            "userid": ctx.user.id
+        }
+    )
+
+    data2 = collection4.find_one(
+        {
+            "userid": ctx.user.id
+        }
+    )
+
+    if data['HasCustomBot'] == True:
+        if collection4.count_documents({ "userid": ctx.user.id }):
+            if data2["userid"] == ctx.user.id:
+                await ctx.send('Deleting bot please wait..')
+                collection4.delete_one(
+                    {
+                        "name": name
+                    }
+                )
+            else:
+                await ctx.send("You haven't created a custom bot.")
+        else:
+            await ctx.send('Something Happend..')
+    else:
+        if data['HasCustomBot'] == False:
+            await ctx.send("You don't own a custom bot.")
+
+
+
+
+
 
 bot.run(TOKEN)
