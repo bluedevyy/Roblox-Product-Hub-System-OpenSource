@@ -4,8 +4,8 @@ from nextcord import SlashOption
 import pymongo
 import random
 
-MONGOURI = ""
-TOKEN = ""
+MONGOURI = "mongodb+srv://Blue:Blue@cluster0.mg0kg.mongodb.net/?retryWrites=true&w=majority"
+TOKEN = "ODkzOTI3MzcxOTg2NTcxMzA2.GNCj8s.mN65TZGyJgCmiJvt-ErmaMSwWS_gaEF274i0AE"
 
 client = pymongo.MongoClient(MONGOURI)
 db = client.data
@@ -231,14 +231,34 @@ async def link(ctx, robloxusername : str = SlashOption(name="robloxusername", de
 @bot.slash_command(name="profile", description="sends a users profile")
 async def profile(ctx, user : nextcord.Member = SlashOption(name="user", description="the users profile you want to view.", required=False)):
 
-    data = collection3.find_one(
+
+# Add Stuff Later
+
+
+
+
+    if user:
+        data2 = collection3.find_one(
         {
             "userid": user.id
         }
     )
-
-    embed = nextcord.Embed(title=f"Profile Of {user.name}", description=f"DiscordID:\n{user.id}\nRobloxusername:\n{data['robloxusername']}").add_field(name="OwnedProducts", value=f"\n".join(map(str, data['Ownedproducts'])))
+        embed = nextcord.Embed(title=f"Profile Of {user.name}", description=f"DiscordID:\n{user.id}\nRobloxusername:\n{data2['robloxusername']}").add_field(name="OwnedProducts", value=f"\n".join(map(str, data2['Ownedproducts'])))
     if collection3.count_documents({ "userid": user.id }):
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send("User isn't linked.")
+
+
+    if not user:
+        data = collection3.find_one(
+        {
+            "userid": ctx.user.id
+        }
+    )
+
+        embed = nextcord.Embed(title=f"Profile Of {user.name}", description=f"DiscordID:\n{user.id}\nRobloxusername:\n{data['robloxusername']}").add_field(name="OwnedProducts", value=f"\n".join(map(str, data['Ownedproducts'])))
+    if collection3.count_documents({ "userid": ctx.user.id }):
         await ctx.send(embed=embed)
     else: 
         await ctx.send("User isn't linked.")
@@ -316,7 +336,7 @@ async def createcustombot(ctx, name : str = SlashOption(name="name", description
         }
     )
 
-    if data['HasCustomBot'] == True:
+    if collection3.count_documents({ "HasCustomBot": True }):
         await ctx.send('Creating custom bot please wait..')
 
         collection4.insert_one(
@@ -329,8 +349,7 @@ async def createcustombot(ctx, name : str = SlashOption(name="name", description
             }
         )
     else:
-        if data['HasCustomBot'] == False:
-            await ctx.send("Nice try, you don't own a custom bot.") 
+        await ctx.send("Nice try, you don't own a custom bot.") 
 
 @bot.slash_command(name="delete-custombot", description="deletes your custom bot.")
 async def createcustombot(ctx, name : str):
@@ -346,9 +365,9 @@ async def createcustombot(ctx, name : str):
         }
     )
 
-    if data['HasCustomBot'] == True:
+    if collection3.count_documents({ "HasCustomBot": True }):
         if collection4.count_documents({ "userid": ctx.user.id }):
-            if data2["userid"] == ctx.user.id:
+            if collection4.count_documents({ "userid": ctx.user.id }):
                 await ctx.send('Deleting bot please wait..')
                 collection4.delete_one(
                     {
@@ -360,12 +379,15 @@ async def createcustombot(ctx, name : str):
         else:
             await ctx.send('Something Happend..')
     else:
-        if data['HasCustomBot'] == False:
+        if collection3.count_documents({ "HasCustomHub": False }):
             await ctx.send("You don't own a custom bot.")
 
-
-
-
+@bot.slash_command(name="buy", description="quick buy a product.")
+async def quick(ctx, product : str = SlashOption(name="product", description="the products name", required=True)):
+    if collection.count_documents({ "productname": product }):
+        await ctx.send("We're sending you to the roblox hub. to purchase the product you want.")
+    else:
+        await ctx.send("Product doesn't exist or hub doesn't exist.")
 
 
 bot.run(TOKEN)
