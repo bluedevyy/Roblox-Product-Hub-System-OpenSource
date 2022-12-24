@@ -4,8 +4,8 @@ from nextcord import SlashOption
 import pymongo
 import random
 
-MONGOURI = "mongodb+srv://Blue:Blue@cluster0.mg0kg.mongodb.net/?retryWrites=true&w=majority"
-TOKEN = "ODkzOTI3MzcxOTg2NTcxMzA2.GNCj8s.mN65TZGyJgCmiJvt-ErmaMSwWS_gaEF274i0AE"
+MONGOURI = ""
+TOKEN = ""
 
 client = pymongo.MongoClient(MONGOURI)
 db = client.data
