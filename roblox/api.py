@@ -16,3 +16,7 @@ async def status():
 @app.route("/v1/users/status", methods=["GET"])
 async def users():
     return {"UsersAPI": "OK"}
+
+@app.route("/v2/users/profile", methods=["GET"])
+async def profile():
+    return {"MessageData": "ProfileData Has Been Sent In a Json format."}

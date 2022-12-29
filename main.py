@@ -3,6 +3,7 @@ from nextcord.ext import commands, application_checks
 from nextcord import SlashOption
 import pymongo
 import random
+import asyncio
 
 MONGOURI = ""
 TOKEN = ""
@@ -223,6 +224,7 @@ async def link(ctx, robloxusername : str = SlashOption(name="robloxusername", de
                 "robloxusername": robloxusername,
                 "Ownedproducts": ['none'],
                 "linked": True,
+                "refunds": 0,
                 "HasCustomBot": False,
             }
         )
@@ -319,7 +321,7 @@ async def transfer(ctx, newaccount : nextcord.Member = SlashOption(name="newacco
             }
         )
 
-        ok = collection.update_one(
+        ok = collection3.update_one(
         {"userid": ctx.user.id},
         {"$set": 
             {"userid": newaccount.id}
@@ -386,8 +388,22 @@ async def createcustombot(ctx, name : str):
 async def quick(ctx, product : str = SlashOption(name="product", description="the products name", required=True)):
     if collection.count_documents({ "productname": product }):
         await ctx.send("We're sending you to the roblox hub. to purchase the product you want.")
+        await asyncio.sleep(10)
+        await ctx.user.send("Error! couldn't send you to the roblox hub. please visit it manually.")
     else:
         await ctx.send("Product doesn't exist or hub doesn't exist.")
 
+@bot.slash_command(name="refund", description="refunds a product for you.")
+async def refund(ctx, product : str = SlashOption(name="product", description="product name", required=True)):
+    if collection.count_documents({ "productname": product }):
+        await ctx.send('Refunding product. you can only refund 1 time.')
+        ok = collection.update_one(
+        {"refunds": 0 },
+        {"$set": 
+            {"refunds": 1 }
+        },upsert=True
+    )
+    else:
+        await ctx.send("couldn't refund the product, product doesn't exist")
 
 bot.run(TOKEN)
