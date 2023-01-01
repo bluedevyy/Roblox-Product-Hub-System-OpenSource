@@ -16,3 +16,10 @@ then after that put your bot token in the string called: TOKEN = "YourToken"
 then after you have done that put your MongoDB URL in the string called: MONGOURI = "YourMongoURL"
 
 NOTE Do That In main.py near the imports
+
+todo:
+
+Roblox Game Hub
+verification System
+Rest API
+Product USD Payments
